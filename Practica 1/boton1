@@ -1,0 +1,33 @@
+PROGRAM int1press
+LABEL 1
+	PRINTLN "A la espera de que se coloque algo en el boton 1"
+	WAIT IN[1]=1
+	OUT[4]=1
+	MOVED 0
+	SPEED 50
+	MOVED 6
+	SPEED 10
+	OPEN
+	MOVED 7
+	CLOSE
+	IF ENC[6] > -100
+		PRINTLN "Whoooops..."
+		OUT[1]=1
+		SPEED 30
+		DELAY 200
+		OUT[1]=0
+		MOVED 0
+		OUT[4]=0
+		GOTO 1
+	MOVED 6
+	SPEED 30
+	MOVED 3
+	SPEED 10
+	MOVED 4
+	OPEN
+	MOVED 3
+	MOVED 0
+	OUT[4]=0
+	GOTO 1
+
+
