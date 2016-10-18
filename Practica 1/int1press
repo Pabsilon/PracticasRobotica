@@ -28,4 +28,6 @@ LABEL 1
 	MOVED 3
 	MOVED 0
 	OUT[4]=0
+	GOTO 1
+
 
