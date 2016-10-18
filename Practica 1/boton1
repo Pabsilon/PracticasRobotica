@@ -1,7 +1,7 @@
-PROGRAM int1press
+PROGRAM boton1
 LABEL 1
 	PRINTLN "A la espera de que se coloque algo en el boton 1"
-	WAIT IN[1]=1
+	WAIT IN[2]=1
 	OUT[4]=1
 	MOVED 0
 	SPEED 50
