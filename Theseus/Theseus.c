@@ -8,12 +8,14 @@ For the maze, we'll use the left hand (or right hand) algorithm, wich will be de
 For the black line following, we still have to work on it
 
 */
+
 #include <wiringPi.h>
 #include <softPwm.h>
 #include <stdio.h>
 #include <time.h>
 
 //CONSTANT DECLARATION BLOCK
+//TODO: UPDATE GPIO PIN NUMBERS
 
 //Engine Block
 //Engine Gpios
@@ -31,12 +33,17 @@ For the black line following, we still have to work on it
 #define RENGINE_BACKWARDS_FAST LENGINE_FORWARD_FAST
 #define RENGINE_BACKWARDS_SLOW LENGINE_FORWARD_SLOW
 
-//Light Sensor Blocks
+//Light Sensor Block
 #define LS_GPIO 3
 #define RS_GPIO 4
 
+//Proximity Sensor Block
 #define SENSOR_CENTER 5
 #define SENSOR_SIDE 6
+
+#define SENSOR_CLOSE 250
+#define SENSOR_MEDIUM 400
+#define SENSOR_FAR 600
 
 void waitFor (unsigned int seconds){
 	unsigned int retTime = time(0) + seconds;
@@ -163,6 +170,9 @@ void followLine(){
 // If side = 0; it's left hand, if side =1; it's right hand.
 void solveMaze(int side){
 
+//While the sensor on the side <SENSOR_CLOSE , keep forward.
+//If it changes, turn 90º to the SENSOR SIDE.
+//If it doesn't change, and the front sensor becomes close, turn to opposite sensor side 90º
 
 }
 
