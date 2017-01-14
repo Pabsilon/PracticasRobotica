@@ -121,7 +121,14 @@ void acute_right(){
 	softPwmWrite(RENGINE_GPIO,RENGINE_BACKWARDS_SLOW);
 }
 
-//This routine follows a line
+/* Line Following Routine 
+
+It tries to go forward until one of the two sensors, placed at left and right in the front,
+decets that a black line has been crossed. At this point, Thesseus will turn, stopping the wheel
+on the side of the sensor that crossed it.
+This is really rudimentary and should be worked on.
+
+*/
 void followLine(){
 	int left = 0;
 	int right = 0;
@@ -149,6 +156,13 @@ void followLine(){
 	left=0;
 	right=0;
 	followLine();
+
+}
+
+//We will try to solve a maze using the left(or right)hand algorithm
+// If side = 0; it's left hand, if side =1; it's right hand.
+void solveMaze(int side){
+
 
 }
 
