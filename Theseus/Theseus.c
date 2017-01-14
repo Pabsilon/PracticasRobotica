@@ -11,6 +11,7 @@ For the black line following, we still have to work on it
 #include <wiringPi.h>
 #include <softPwm.h>
 #include <stdio.h>
+#include <time.h>
 
 //CONSTANT DECLARATION BLOCK
 
@@ -33,6 +34,14 @@ For the black line following, we still have to work on it
 //Light Sensor Blocks
 #define LS_GPIO 3
 #define RS_GPIO 4
+
+#define SENSOR_CENTER 5
+#define SENSOR_SIDE 6
+
+void waitFor (unsigned int seconds){
+	unsigned int retTime = time(0) + seconds;
+	while(time(0) < retTime);
+}
 
 void forward_fast(){
 	printf("Going Forward Fast.\n");
@@ -76,6 +85,73 @@ void hard_right(){
 	softPwmWrite(RENGINE_GPIO,RENGINE_BACKWARDS_FAST);
 	}
 
+void soft_left(){
+	printf("Doing Soft Left. \n");
+	softPwmWrite(LENGINE_GPIO,LENGINE_FORWARD_SLOW);
+	softPwmWrite(RENGINE_GPIO,RENGINE_FORWARD_FAST);
+}
+
+void soft_right(){
+	printf("Doing Soft Right.\n");
+	softPwmWrite(LENGINE_GPIO,LENGINE_FORWARD_FAST);
+	softPwmWrite(RENGINE_GPIO,RENGINE_FORWARD_SLOW);
+}
+
+void move_right(){
+	printf("Moving Right.\n");
+	softPwmWrite(LENGINE_GPIO,LENGINE_FORWARD_FAST);
+	softPwmWrite(RENGINE_GPIO,ENGINE_STOP);
+}
+
+void move_left(){
+	printf("Moving Left.\n");
+	softPwmWrite(LENGINE_GPIO,ENGINE_STOP);
+	softPwmWrite(RENGINE_GPIO,RENGINE_FORWARD_FAST);
+}
+
+void acute_left(){
+	printf("Doing Acute Left.\n");
+	softPwmWrite(LENGINE_GPIO,LENGINE_BACKWARDS_SLOW);
+	softPwmWrite(RENGINE_GPIO,RENGINE_FORWARD_FAST);
+}
+
+void acute_right(){
+	printf("Doing Acute Right.\n");
+	softPwmWrite(LENGINE_GPIO,LENGINE_FORWARD_FAST);
+	softPwmWrite(RENGINE_GPIO,RENGINE_BACKWARDS_SLOW);
+}
+
+//This routine follows a line
+void followLine(){
+	int left = 0;
+	int right = 0;
+	while ((!digitalRead(LS_GPIO))&&(!digitalRead(RS_GPIO))){
+		forward_fast();
+	}
+	while (digitalRead(LS_GPIO)){
+		move_left();
+		if (left==0){
+			left=1;
+		}
+	}
+	if(left==1){
+		waitFor(1);
+	} 
+	while(digitalRead(RS_GPIO)){
+		move_right();
+		if (right==0){
+			right=1;
+		}
+	}
+	if (right==1){
+		waitFor(1);
+	}
+	left=0;
+	right=0;
+	followLine();
+
+}
+
 int main(){
 	//wiringPi initialization, necessary.
 	wiringPiSetup();
@@ -83,12 +159,8 @@ int main(){
 	//The wiringPi documentation says each softPwmCreate uses 0.5% of the CPU, so it should be safe
 	softPwmCreate(LENGINE_GPIO,0,200);
 	softPwmCreate(RENGINE_GPIO,0,200);
-	//We try to fast forward
-	forward_fast();
-
-	/*
-	INTRODUCE MAIN BODY OF THE THESSEUS ROVER PROGRAMMING HERE
-	*/
+	
+	followLine();
 
 	while(1){
 	}
