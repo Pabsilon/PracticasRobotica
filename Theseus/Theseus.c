@@ -117,6 +117,17 @@ void move_left(){
 	softPwmWrite(RENGINE_GPIO,RENGINE_FORWARD_FAST);
 }
 
+void backwards_left(){
+	softPwmWrite(LENGINE_GPIO,LENGINE_BACKWARDS_FAST);
+	softPwmWrite(RENGINE_GPIO,ENGINE_STOP);
+}
+
+void backwards_right(){
+	softPwmWrite(LENGINE_GPIO,ENGINE_STOP);
+	softPwmWrite(RENGINE_GPIO,RENGINE_BACKWARDS_FAST);
+}
+
+
 /* Line Following Routine 
 
 It tries to go forward until one of the two sensors, placed at left and right in the front,
@@ -157,41 +168,46 @@ void followLine(){
 
 }
 
-//We will try to solve a maze using the left(or right)hand algorithm
-// If side = 0; it's left hand, if side =1; it's right hand.
+//We will try to solve a maze using the left hand algorithm.
+
+//This robot doesn't collide with walls on it's left and always tries to stay at the same distante from it.
 void solveMaze(){
-	while (readProximity(SENSOR_CENTER)>SENSOR_CENTER_COLLISION_DISTANCE){
-		backwards_fast();
-	}
-	//Move Forward
+	//If we are inside the acceptable limits from the wall, we advance in a straight line.
 	while (SENSOR_ACCEPTABLE_MAX>readProximity(SENSOR_SIDE)&&readProximity(SENSOR_SIDE)>SENSOR_ACCEPTABLE_MIN){
 		forward_fast();
-		//Turn in case of obstacle in front
+
+
+		//TODO :  if (sensor_center)>sensor_center_turn_distance) while (sensor_center)>sensor_center_turn_distance+100)
+
+		//If we detect a wall in front of us (the range of detection is smaller than the robot, so we wouldn't really miss any left hand turns
 		while (readProximity(SENSOR_CENTER)>SENSOR_CENTER_TURN_DISTANCE&&(readProximity(SENSOR_CENTER)<SENSOR_CENTER_COLLISION_DISTANCE)){
 			move_right();
 		}
+		//If we find ourselves too close to a wall, we go backwards in the opposite direction.
 		while(readProximity(SENSOR_CENTER)>SENSOR_CENTER_COLLISION_DISTANCE){
-			backwards_fast();
+			backwards_left();
 		}
 	}
-	//Correct vector to wall, right drifting
+	//If we are going straight, and we leave the acceptable limits from the right
 	while ((SENSOR_ACCEPTABLE_MAX>readProximity(SENSOR_SIDE)&&readProximity(SENSOR_SIDE)<SENSOR_ACCEPTABLE_MIN)){
 		move_left();
 		//If we find an object in our path while correcting we turn to the right
 		if (readProximity(SENSOR_CENTER)>SENSOR_CENTER_TURN_DISTANCE&&(readProximity(SENSOR_CENTER)<SENSOR_CENTER_COLLISION_DISTANCE)){
 			move_right();
 		}
+		//Same as  before, we go backwards in the oposite direction
 		while(readProximity(SENSOR_CENTER)>SENSOR_CENTER_COLLISION_DISTANCE){
-			backwards_fast();
+			backwards_left();
 		}
 	}
-	//Correct vector to wall, left drifting
+	//If we leave the acceptable limits from the left
 	while (SENSOR_ACCEPTABLE_MAX< readProximity(SENSOR_SIDE)&&readProximity(SENSOR_SIDE)>SENSOR_ACCEPTABLE_MIN){
 		move_right();
 		while(readProximity(SENSOR_CENTER)>SENSOR_CENTER_COLLISION_DISTANCE){
-			backwards_fast();
+			backwards_left();
 		}
 	}
+	//Recursive call to keep the engines going.
 	solveMaze();
 
 }
@@ -199,7 +215,9 @@ void solveMaze(){
 int main(){
 	//wiringPi initialization, necessary.
 	wiringPiSetup();
+	//SPI driver, for the distance sensors.
 	loadSPIDriver();
+	//Yet another call for the spi
 	spiSetup(0);
 	//PwmCreation, necesarry for each GPIO in order to send signals.
 	//The wiringPi documentation says each softPwmCreate uses 0.5% of the CPU, so it should be safe
