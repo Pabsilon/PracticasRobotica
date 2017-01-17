@@ -177,15 +177,17 @@ void solveMaze(){
 		forward_fast();
 
 
-		//TODO :  if (sensor_center)>sensor_center_turn_distance) while (sensor_center)>sensor_center_turn_distance+100)
+		
 
 		//If we detect a wall in front of us (the range of detection is smaller than the robot, so we wouldn't really miss any left hand turns
 		while (readProximity(SENSOR_CENTER)>SENSOR_CENTER_TURN_DISTANCE&&(readProximity(SENSOR_CENTER)<SENSOR_CENTER_COLLISION_DISTANCE)){
 			move_right();
 		}
 		//If we find ourselves too close to a wall, we go backwards in the opposite direction.
-		while(readProximity(SENSOR_CENTER)>SENSOR_CENTER_COLLISION_DISTANCE){
-			backwards_left();
+		if(readProximity(SENSOR_CENTER)>SENSOR_CENTER_COLLISION_DISTANCE){
+			while(readProximity(SENSOR_CENTER)>SENSOR_CENTER_TURN_DISTANCE){
+				backwards_left();
+			}
 		}
 	}
 	//If we are going straight, and we leave the acceptable limits from the right
@@ -196,15 +198,19 @@ void solveMaze(){
 			move_right();
 		}
 		//Same as  before, we go backwards in the oposite direction
-		while(readProximity(SENSOR_CENTER)>SENSOR_CENTER_COLLISION_DISTANCE){
-			backwards_left();
+		if(readProximity(SENSOR_CENTER)>SENSOR_CENTER_COLLISION_DISTANCE){
+			while(readProximity(SENSOR_CENTER)>SENSOR_CENTER_TURN_DISTANCE){
+				backwards_left();
+			}
 		}
 	}
 	//If we leave the acceptable limits from the left
 	while (SENSOR_ACCEPTABLE_MAX< readProximity(SENSOR_SIDE)&&readProximity(SENSOR_SIDE)>SENSOR_ACCEPTABLE_MIN){
 		move_right();
-		while(readProximity(SENSOR_CENTER)>SENSOR_CENTER_COLLISION_DISTANCE){
-			backwards_left();
+		if(readProximity(SENSOR_CENTER)>SENSOR_CENTER_COLLISION_DISTANCE){
+			while(readProximity(SENSOR_CENTER)>SENSOR_CENTER_TURN_DISTANCE){
+				backwards_left();
+			}
 		}
 	}
 	//Recursive call to keep the engines going.
