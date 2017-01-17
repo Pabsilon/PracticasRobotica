@@ -1,4 +1,0 @@
-El código utilizado para generar la señal del motor se encuentra en la raspi, en $./wiringPi/Examples/blink
-Es un programa en c que se puede recompilar para poder variar la velocidad del giro del motor.
-Hemos seguido el montaje segun el profesor y hay dos fotos de como estaba hecho.
-Hemos probado varias velocidades desde 1 segundo, 0.5 y hemos bajado hasta 1ms, donde el movimiento era casi continuo.
