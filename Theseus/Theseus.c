@@ -1,5 +1,5 @@
 /*
-Created by Pablo Mac-Veigh and Javier Sésé, for our Robotics class of 2016-2017.
+Created by The group 5, for our Robotics class of 2016-2017.
 
 This project uses the standard MIT license.
 
@@ -8,7 +8,7 @@ For the maze, we'll use the left hand (or right hand) algorithm, wich will be de
 For the black line following, we still have to work on it
 
 */
-
+#include <stdlib.h>
 #include <wiringPi.h>
 #include <wiringPiSPI.h>
 #include <softPwm.h>
@@ -95,14 +95,14 @@ void hard_stop(){
 
 void hard_left(){
 //	printf("Doing Hard Left. \n");
-	softPwmWrite(LENGINE_GPIO,LENGINE_BACKWARDS_FAST);
-	softPwmWrite(RENGINE_GPIO,RENGINE_FORWARD_FAST);
+	softPwmWrite(LENGINE_GPIO,LENGINE_FORWARD_FAST);
+	softPwmWrite(RENGINE_GPIO,RENGINE_BACKWARDS_FAST);
 }
 
 void hard_right(){
 //	printf("Doing Hard Right. \n");
-	softPwmWrite(LENGINE_GPIO,LENGINE_FORWARD_FAST);
-	softPwmWrite(RENGINE_GPIO,RENGINE_BACKWARDS_FAST);
+	softPwmWrite(LENGINE_GPIO,LENGINE_BACKWARDS_FAST);
+	softPwmWrite(RENGINE_GPIO,RENGINE_FORWARD_FAST);
 }
 
 void move_right(){
@@ -118,18 +118,19 @@ void move_left(){
 }
 
 void backwards_left(){
-	softPwmWrite(LENGINE_GPIO,LENGINE_BACKWARDS_FAST);
-	softPwmWrite(RENGINE_GPIO,ENGINE_STOP);
+	softPwmWrite(LENGINE_GPIO,ENGINE_STOP);
+	softPwmWrite(RENGINE_GPIO,RENGINE_BACKWARDS_FAST);
 }
 
 void backwards_right(){
-	softPwmWrite(LENGINE_GPIO,ENGINE_STOP);
-	softPwmWrite(RENGINE_GPIO,RENGINE_BACKWARDS_FAST);
+	softPwmWrite(LENGINE_GPIO,LENGINE_BACKWARDS_FAST);
+	softPwmWrite(RENGINE_GPIO,ENGINE_STOP);
 }
 
 
 /* Line Following Routine 
 
+		while (!digitalRead(LS_GPIO)&&!digitalRead(RS_GPIO)){
 It tries to go forward until one of the two sensors, placed at left and right in the front,
 decets that a black line has been crossed. At this point, Thesseus will turn, stopping the wheel
 on the side of the sensor that crossed it.
@@ -137,33 +138,29 @@ This is really rudimentary and should be worked on.
 
 */
 void followLine(){
-	int left = 0;
-	int right = 0;
+	int left;
+	int right;
 	while ((digitalRead(LS_GPIO))&&(digitalRead(RS_GPIO))){
 		forward_fast();
 	}
 	while (!digitalRead(LS_GPIO)){
-		move_left();
-		printf("SENSOR IZQUIERO PISA NEGRO \n");
-		if (left==0){
-			left=1;
+		hard_right();
+		while (!digitalRead(LS_GPIO)&&!digitalRead(RS_GPIO)){
+			backwards_right();
+			while (!digitalRead(RS_GPIO)&&(digitalRead(LS_GPIO))){
+				forward_fast();
+			}
 		}
-	}
-	if(left==1){
-		//waitFor(1);
 	} 
 	while (!digitalRead(RS_GPIO)){
-		move_right();
-		printf("SENSOR DERECHO PISA NEGRO \n");
-		if (right==0){
-			right=1;
+		hard_left();
+		while (!digitalRead(LS_GPIO)&&!digitalRead(RS_GPIO)){
+			backwards_left();
+			while (!digitalRead(LS_GPIO)&&(digitalRead(RS_GPIO))){
+				forward_fast();
+			}	
 		}
 	}
-	if (right==1){
-		//waitFor(1);
-	}
-	left=0;
-	right=0;
 	followLine();
 
 }
@@ -185,8 +182,8 @@ void solveMaze(){
 		}
 		//If we find ourselves too close to a wall, we go backwards in the opposite direction.
 		if(readProximity(SENSOR_CENTER)>SENSOR_CENTER_COLLISION_DISTANCE){
-			while(readProximity(SENSOR_CENTER)>SENSOR_CENTER_TURN_DISTANCE){
-				backwards_left();
+			while(readProximity(SENSOR_CENTER)>SENSOR_CENTER_TURN_DISTANCE-200){
+				hard_left();
 			}
 		}
 	}
@@ -194,13 +191,13 @@ void solveMaze(){
 	while ((SENSOR_ACCEPTABLE_MAX>readProximity(SENSOR_SIDE)&&readProximity(SENSOR_SIDE)<SENSOR_ACCEPTABLE_MIN)){
 		move_left();
 		//If we find an object in our path while correcting we turn to the right
-		if (readProximity(SENSOR_CENTER)>SENSOR_CENTER_TURN_DISTANCE&&(readProximity(SENSOR_CENTER)<SENSOR_CENTER_COLLISION_DISTANCE)){
+		while (readProximity(SENSOR_CENTER)>SENSOR_CENTER_TURN_DISTANCE&&(readProximity(SENSOR_CENTER)<SENSOR_CENTER_COLLISION_DISTANCE)){
 			move_right();
 		}
 		//Same as  before, we go backwards in the oposite direction
 		if(readProximity(SENSOR_CENTER)>SENSOR_CENTER_COLLISION_DISTANCE){
-			while(readProximity(SENSOR_CENTER)>SENSOR_CENTER_TURN_DISTANCE){
-				backwards_left();
+			while(readProximity(SENSOR_CENTER)>SENSOR_CENTER_TURN_DISTANCE-200){
+				hard_left();
 			}
 		}
 	}
@@ -209,7 +206,7 @@ void solveMaze(){
 		move_right();
 		if(readProximity(SENSOR_CENTER)>SENSOR_CENTER_COLLISION_DISTANCE){
 			while(readProximity(SENSOR_CENTER)>SENSOR_CENTER_TURN_DISTANCE){
-				backwards_left();
+				hard_left();
 			}
 		}
 	}
@@ -218,7 +215,12 @@ void solveMaze(){
 
 }
 
-int main(){
+void usage(void){
+	printf("Usage: \n");
+	printf("  -f : Follows a Line\n");
+	printf("  -s : Solves a Maze\n");
+}
+int main(int argc, char *argv[]){
 	//wiringPi initialization, necessary.
 	wiringPiSetup();
 	//SPI driver, for the distance sensors.
@@ -229,6 +231,21 @@ int main(){
 	//The wiringPi documentation says each softPwmCreate uses 0.5% of the CPU, so it should be safe
 	softPwmCreate(LENGINE_GPIO,0,200);
 	softPwmCreate(RENGINE_GPIO,0,200);
-	//followLine()
-	solveMaze();
+	
+	if ((argc > 1) && (argv[1][0] =='-')){
+		switch (argv[1][1]){
+			case 'f':
+				followLine();
+				break;
+			case 's':
+				solveMaze();
+				break;
+			default:
+				printf("Wrong Arguments: %s\n", argv[1]);
+				usage();
+		}
+	}else if (argc ==1){
+		usage();
+	}
+	return(0);
 }
